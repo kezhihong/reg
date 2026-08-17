@@ -2,6 +2,7 @@
 .env
 deploy/.env
 *.env.local
+服务器.txt
 
 # ===== 依赖与构建产物 =====
 backend/vendor/

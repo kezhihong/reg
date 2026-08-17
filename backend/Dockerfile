@@ -8,9 +8,10 @@ ENV APP_ENV=${APP_ENV}
 
 WORKDIR /opt/www
 
-# 依赖与源码
+# 依赖与源码（国内服务器使用阿里云 Composer 镜像，规避 codeload.github.com 429 限流）
 COPY composer.json composer.lock* ./
-RUN composer install --no-dev --no-scripts --no-autoloader --ignore-platform-reqs && \
+RUN composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/ && \
+    composer install --no-dev --no-scripts --no-autoloader --ignore-platform-reqs && \
     composer clear-cache
 
 COPY . .

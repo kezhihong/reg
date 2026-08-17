@@ -3,7 +3,9 @@ FROM node:20-alpine AS build
 
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm install --no-fund --no-audit
+# 国内服务器使用 npmmirror 镜像，规避 registry.npmjs.org 网络问题
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install --no-fund --no-audit
 COPY . .
 RUN npm run build
 
