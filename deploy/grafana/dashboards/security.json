@@ -1,0 +1,49 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "panels": [
+    {
+      "id": 1,
+      "title": "登录成功率（5m）",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "loki", "uid": "" },
+      "targets": [
+        {
+          "expr": "sum(rate({service=\"backend\"} | json | action=\"auth.login_success\"[5m])) / (sum(rate({service=\"backend\"} | json | action=~\"auth.login_success|auth.login_failed\"[5m])) + 1) * 100",
+          "legendFormat": "成功率"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "限流命中（429）",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "loki", "uid": "" },
+      "targets": [
+        {
+          "expr": "sum(rate({service=\"backend\"} | json | status=~\"429\"[5m]))",
+          "legendFormat": "429"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Refresh 重用检测（P0）",
+      "type": "stat",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "datasource": { "type": "loki", "uid": "" },
+      "targets": [
+        {
+          "expr": "count_over_time({service=\"backend\"} | json | action=\"refresh.reuse_detected\"[24h])",
+          "legendFormat": "次数"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "title": "mem-reg 安全面板",
+  "uid": "mem-reg-security",
+  "version": 1
+}

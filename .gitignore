@@ -1,0 +1,35 @@
+# ===== 环境与密钥（禁止入库） =====
+.env
+deploy/.env
+*.env.local
+
+# ===== 依赖与构建产物 =====
+backend/vendor/
+backend/runtime/
+backend/.composer-cache/
+frontend/node_modules/
+frontend/dist/
+
+# ===== 上传文件（保留目录结构） =====
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
+!backend/public/uploads/avatars/
+backend/public/uploads/avatars/*
+
+# ===== 临时与调试 =====
+*.log
+.DS_Store
+Thumbs.db
+backend/check_*.php
+backend/dbg*.php
+backend/clear_rate*.php
+backend/cls_test.php
+backend/curl_test*.php
+backend/t_conn.php
+backend/chk_*.php
+backend/composer.phar
+backend/composer-setup.php
+
+# ===== IDE =====
+.idea/
+.vscode/
