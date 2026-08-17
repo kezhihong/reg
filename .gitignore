@@ -33,3 +33,6 @@ backend/composer-setup.php
 # ===== IDE =====
 .idea/
 .vscode/
+
+# 测试运行缓存
+backend/.phpunit.result.cache

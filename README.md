@@ -85,7 +85,6 @@ mem_reg/
 ├── backend/             # Hyperf 3.x 后端（Controller→Service→Model）
 │   ├── app/             # Controller / Service / Model / Middleware / Provider / Job…
 │   ├── migrations/      # 幂等迁移（migrate 命令执行）
-│   ├── tests/           # PHPUnit（认证/2FA/轮换/限流/回调幂等）
 │   └── .env.example     # 环境变量模板（docs/05 §3）
 ├── frontend/            # Vue 3 + Vite + Element Plus + Pinia
 │   └── src/             # api / stores / router / views / utils / constants
