@@ -8,17 +8,11 @@ ENV APP_ENV=${APP_ENV}
 
 WORKDIR /opt/www
 
-# 依赖与源码（国内镜像源 + BuildKit 缓存挂载 + 重试：codeload 间歇性 429，
-# 缓存使每轮仅重试失败的包，避免整轮重下；缓存挂载不进入镜像层）
+# 依赖与源码（国内服务器使用阿里云 Composer 镜像，规避 codeload.github.com 429 限流）
 COPY composer.json composer.lock* ./
-RUN --mount=type=cache,target=/root/.composer/cache \
-    composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/ && \
-    for i in 1 2 3 4 5 6 7 8; do \
-      composer install --no-dev --no-scripts --no-autoloader --ignore-platform-reqs --prefer-dist \
-        && break \
-        || { echo "== composer install 第 $i 次失败，20s 后重试 =="; sleep 20; }; \
-    done && \
-    test -d vendor && test -f vendor/autoload.php && echo "== composer install OK =="
+RUN composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/ && \
+    composer install --no-dev --no-scripts --no-autoloader --ignore-platform-reqs && \
+    composer clear-cache
 
 COPY . .
 RUN composer dump-autoload --optimize --no-scripts && \
