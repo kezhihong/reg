@@ -4,9 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目状态
 
-- **设计阶段已定稿**：`设计规范.md` + 6 份开发文档（`README.md` + `docs/01~05`）为唯一权威出处，仓库内尚无代码（仅有 `.idea/` PHPStorm 配置）。
-- 技术栈已确认：Vue 3 + Element Plus / Hyperf (PHP/Swoole) / MySQL 8 / Redis / Docker Compose → K8s（见 `README.md`）。
+- **实现阶段**：`设计规范.md` + 6 份开发文档（`README.md` + `docs/01~05`）仍为唯一权威出处；代码产出见 `backend/`（Hyperf 3.1 后端，39+ 接口）、`frontend/`（Vue 3 + Vite + Element Plus + Pinia）、`sql/schema.sql`（`sc_` 前缀基线 Schema，幂等）、`deploy/`（Compose + nginx + Promtail/Loki/Grafana + sms-mock）。
+- 技术栈已落地：Vue 3 + Element Plus / Hyperf 3.1 (PHP 8.2/Swoole) / MySQL 8 / Redis / Docker Compose → K8s（见 `README.md`）。
 - 实现任何功能前，先阅读对应文档章节，再按 `设计规范.md` 第 3 节清单自检；接口路径、错误码、表名/字段、限流阈值、环境变量名以文档为准，不得偏离。
+- **Hyperf 3.1 与文档的版本差异适配记录在 `backend/ADAPTATION.md`**（Response 不可变 + Cookie 对象、配置键顶层列表、注解缓存清理等），改后端前必读。
 
 ## 开发文档导航（唯一权威出处）
 
@@ -67,10 +68,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 提交评审前按 `设计规范.md` 第 3 节的「提交前检查清单」逐条核对（含「禁止做的事」红线）。migration 必须幂等（`IF NOT EXISTS` / `INSERT IGNORE`），并本地验证「全新安装 + 升级安装」两条路径。
 
-## 命令
+## 命令（实测可用）
 
-当前尚无代码，未配置任何构建 / lint / 测试命令。规范要求的基线（实现后需落地）：
+- 后端语法检查：`cd backend && composer analyse`（`php -l` 扫 bin/app/config，CI 同款）
+- 后端本地开发：`cd backend && composer install && php bin/hyperf.php start`（需 PHP ≥ 8.2 + Swoole 扩展）
+- 迁移 / 演示数据（幂等）：`php bin/hyperf.php migrate`、`php bin/hyperf.php db:seed`
+- 注解缓存：改后端代码后 `rm -rf runtime/container/*` 再重启，否则注解路由/命令/事件不刷新
+- 前端：`cd frontend && npm run dev`（Vite 代理 `/api` → 9501）、`npm run build`、`npm run preview`
+- Docker 一键启动：`cd deploy && cp .env.example .env`（必填 `JWT_SECRET` / `JWT_TICKET_SECRET` / `TOTP_ENCRYPTION_KEY`）`&& docker compose up -d --build`；仅核心服务 `docker compose up -d mysql redis backend frontend`；完整日志栈加 `--profile full`
+- CI（`.github/workflows/ci.yml`）：backend = PHP 8.2 + `php -l`；frontend = Node 20 + `npm ci && npm run build`
 
-- 静态检查：phpstan / psalm 纳入 CI（`[应该]` 项）
-- 测试：认证、支付、权限等关键流程必须有自动化测试（`[必须]` 项）；修复 bug 先补回归测试
-- 开发环境：Composer 基于 `composer.lock` 构建
+测试现状：`backend/vendor/bin/phpunit` 存在但**无测试文件与 phpunit.xml**（`.phpunit.result.cache` 为历史遗留）；按 `ADAPTATION.md` §3，自动化测试采用真实 HTTP 集成方式（curl 访问运行中的服务）。认证/2FA/KYC 等关键流程补自动化测试是规范 `[必须]` 项，尚未落地。

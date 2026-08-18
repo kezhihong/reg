@@ -1,7 +1,10 @@
 # ============================================================================
 # mem_reg · 服务器部署（1Panel 外部 MySQL/Redis，docs/05 §7 同构演进）
 # 用法：cp .env.example .env（填入密钥）&& docker compose -f docker-compose.server.yml up -d --build
-# 外部依赖：MySQL/Redis 使用 Docker 网关 172.17.0.1（1Panel 容器映射端口）
+# 部署根目录（绝对路径）：/opt/1panel/www/sites/reg
+# 外部依赖：1Panel 容器 MySQL（1Panel-mysql-b5Tx）与 Redis（1Panel-redis-GHEI），
+#           账号密码经 .env 注入（不落库）；backend 容器需能解析上述容器名
+#           （同 Docker 网络；若无法解析，docker network connect <1panel网络> mem-reg-backend）
 # ============================================================================
 
 name: mem-reg
@@ -9,21 +12,21 @@ name: mem-reg
 services:
   backend:
     build:
-      context: ../backend
+      context: /opt/1panel/www/sites/reg/backend
       dockerfile: Dockerfile
     container_name: mem-reg-backend
     environment:
-      APP_ENV: ${APP_ENV:-dev}
+      APP_ENV: ${APP_ENV:-test}
       APP_DEBUG: ${APP_DEBUG:-false}
       LOG_LEVEL: ${LOG_LEVEL:-info}
-      MYSQL_HOST: ${MYSQL_HOST:-172.17.0.1}
+      MYSQL_HOST: ${MYSQL_HOST:-1Panel-mysql-b5Tx}
       MYSQL_PORT: ${MYSQL_PORT:-3306}
       MYSQL_DATABASE: ${MYSQL_DATABASE:-mem_reg}
-      MYSQL_USER: ${MYSQL_USER:-app}
+      MYSQL_USER: ${MYSQL_USER:-root}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD 必填}
-      REDIS_HOST: ${REDIS_HOST:-172.17.0.1}
+      REDIS_HOST: ${REDIS_HOST:-1Panel-redis-GHEI}
       REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD 必填}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET 必填}
       JWT_TICKET_SECRET: ${JWT_TICKET_SECRET:?JWT_TICKET_SECRET 必填}
       TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY 必填}
@@ -39,21 +42,21 @@ services:
       RATE_IP_REFRESH: ${RATE_IP_REFRESH:-200}
       RATE_SMS_PER_HOUR: ${RATE_SMS_PER_HOUR:-300}
     ports:
-      - "${BACKEND_PORT:-9501}:9501"
+      - "127.0.0.1:${BACKEND_PORT:-9501}:9501"
     volumes:
       - backend-runtime:/opt/www/runtime
-      - ../backend/public/uploads:/opt/www/public/uploads
+      - /opt/1panel/www/sites/reg/backend/public/uploads:/opt/www/public/uploads
     restart: unless-stopped
 
   frontend:
     build:
-      context: ../frontend
+      context: /opt/1panel/www/sites/reg/frontend
       dockerfile: Dockerfile
     container_name: mem-reg-frontend
     ports:
       - "${FRONTEND_PORT:-8080}:80"
     volumes:
-      - ../deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - /opt/1panel/www/sites/reg/deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
 
 volumes:
