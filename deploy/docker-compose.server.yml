@@ -21,7 +21,7 @@ services:
     environment:
       # ---- 应用（测试环境）----
       APP_ENV: test
-      APP_DEBUG: "false"
+      APP_DEBUG: "true"
       LOG_LEVEL: info
       # ---- MySQL（1Panel 外部容器）----
       MYSQL_HOST: mysql
