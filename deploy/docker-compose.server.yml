@@ -24,13 +24,13 @@ services:
       APP_DEBUG: "false"
       LOG_LEVEL: info
       # ---- MySQL（1Panel 外部容器）----
-      MYSQL_HOST: 1Panel-mysql-b5Tx
+      MYSQL_HOST: mysql
       MYSQL_PORT: "3306"
       MYSQL_DATABASE: mem_reg
       MYSQL_USER: root
       MYSQL_PASSWORD: HZG@MKKB62
       # ---- Redis（1Panel 外部容器）----
-      REDIS_HOST: 1Panel-redis-GHEI
+      REDIS_HOST: redis
       REDIS_PORT: "6379"
       REDIS_PASSWORD: R123@DKZHWnJCD
       # ---- 密钥（已生成，勿外泄）----
