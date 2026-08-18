@@ -1,10 +1,13 @@
 # ============================================================================
-# mem_reg · 服务器部署（1Panel 外部 MySQL/Redis，docs/05 §7 同构演进）
-# 用法：cp .env.example .env（填入密钥）&& docker compose -f docker-compose.server.yml up -d --build
+# mem_reg · 服务器部署专用（1Panel 外部 MySQL/Redis，docs/05 §7 同构演进）
 # 部署根目录（绝对路径）：/opt/1panel/www/sites/reg
+# 本文件为测试环境服务器专用配置，凭据/密钥直接内联（1Panel 容器编排
+# 直接粘贴/加载本文件即可运行，不依赖 .env）；注意：本文件被 git 跟踪，
+# 含真实凭据，请勿推送公开仓库/外泄（凭据备份见 deploy/.env，已被 gitignore）
 # 外部依赖：1Panel 容器 MySQL（1Panel-mysql-b5Tx）与 Redis（1Panel-redis-GHEI），
-#           账号密码经 .env 注入（不落库）；backend 容器需能解析上述容器名
-#           （同 Docker 网络；若无法解析，docker network connect <1panel网络> mem-reg-backend）
+#           backend 容器需能解析上述容器名（同 Docker 网络；若无法解析，
+#           docker network connect <1panel网络> mem-reg-backend）
+# 前置：1Panel MySQL 中先手动创建 mem_reg 库（migrations 只建表不建库）
 # ============================================================================
 
 name: mem-reg
@@ -16,33 +19,39 @@ services:
       dockerfile: Dockerfile
     container_name: mem-reg-backend
     environment:
-      APP_ENV: ${APP_ENV:-test}
-      APP_DEBUG: ${APP_DEBUG:-false}
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      MYSQL_HOST: ${MYSQL_HOST:-1Panel-mysql-b5Tx}
-      MYSQL_PORT: ${MYSQL_PORT:-3306}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-mem_reg}
-      MYSQL_USER: ${MYSQL_USER:-root}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD 必填}
-      REDIS_HOST: ${REDIS_HOST:-1Panel-redis-GHEI}
-      REDIS_PORT: ${REDIS_PORT:-6379}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:?REDIS_PASSWORD 必填}
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET 必填}
-      JWT_TICKET_SECRET: ${JWT_TICKET_SECRET:?JWT_TICKET_SECRET 必填}
-      TOTP_ENCRYPTION_KEY: ${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY 必填}
-      COOKIE_SECURE: ${COOKIE_SECURE:-false}
-      SMS_MOCK: ${SMS_MOCK:-true}
-      KYC_PROVIDER: ${KYC_PROVIDER:-mock}
-      KYC_PROVIDER_SECRET: ${KYC_PROVIDER_SECRET:-mock-secret}
-      OAUTH_REDIRECT_WHITELIST: ${OAUTH_REDIRECT_WHITELIST:-http://202.60.232.42:8080}
+      # ---- 应用（测试环境）----
+      APP_ENV: test
+      APP_DEBUG: "false"
+      LOG_LEVEL: info
+      # ---- MySQL（1Panel 外部容器）----
+      MYSQL_HOST: 1Panel-mysql-b5Tx
+      MYSQL_PORT: "3306"
+      MYSQL_DATABASE: mem_reg
+      MYSQL_USER: root
+      MYSQL_PASSWORD: HZG@MKKB62
+      # ---- Redis（1Panel 外部容器）----
+      REDIS_HOST: 1Panel-redis-GHEI
+      REDIS_PORT: "6379"
+      REDIS_PASSWORD: R123@DKZHWnJCD
+      # ---- 密钥（已生成，勿外泄）----
+      JWT_SECRET: 209eda4e0deac562409be6d97cedc8113c7e217a7bf8d089adc9bc97ecc02f4e951c2e79e6c0d626e939fe53633e4502e89d243054c7f025e59cde1e38bf59d8
+      JWT_TICKET_SECRET: 8e0edc619364a0038c31ea7c896007d3945fe71b2933d40760d48cec1e07bdf362037555f6dc717ff54c5a83ad20429b8db5353f0704e848fd66a11a55975961
+      TOTP_ENCRYPTION_KEY: iJ6HRdtFMrwA9B4yvmCR/amldylpb3iNCVATV3wB868=
+      # ---- Cookie（HTTP 访问，故 false）----
+      COOKIE_SECURE: "false"
+      # ---- 演示门禁（test 允许 mock；生产必须 SMS_MOCK=false）----
+      SMS_MOCK: "true"
+      KYC_PROVIDER: mock
+      KYC_PROVIDER_SECRET: mock-secret
+      OAUTH_REDIRECT_WHITELIST: http://202.60.232.42:8080
       AUTH_EXCEPT_PATHS: /api/v1/kyc/callback/,/api/v1/2fa/login/verify,/api/v1/2fa/recovery/verify
-      LOGIN_DEFAULT_COUNTRY_CODE: ${LOGIN_DEFAULT_COUNTRY_CODE:-+86}
-      RATE_IP_REGISTER: ${RATE_IP_REGISTER:-100}
-      RATE_IP_DEFAULT: ${RATE_IP_DEFAULT:-200}
-      RATE_IP_REFRESH: ${RATE_IP_REFRESH:-200}
-      RATE_SMS_PER_HOUR: ${RATE_SMS_PER_HOUR:-300}
+      LOGIN_DEFAULT_COUNTRY_CODE: "+86"
+      RATE_IP_REGISTER: "100"
+      RATE_IP_DEFAULT: "200"
+      RATE_IP_REFRESH: "200"
+      RATE_SMS_PER_HOUR: "300"
     ports:
-      - "127.0.0.1:${BACKEND_PORT:-9501}:9501"
+      - "127.0.0.1:9501:9501"
     volumes:
       - backend-runtime:/opt/www/runtime
       - /opt/1panel/www/sites/reg/backend/public/uploads:/opt/www/public/uploads
@@ -54,7 +63,7 @@ services:
       dockerfile: Dockerfile
     container_name: mem-reg-frontend
     ports:
-      - "${FRONTEND_PORT:-8080}:80"
+      - "8080:80"
     volumes:
       - /opt/1panel/www/sites/reg/deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     restart: unless-stopped
